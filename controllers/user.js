@@ -30,7 +30,6 @@ exports.signup = async (req, res) => {
       password,
       confirmPassword,
       role,
-      image,
       otp,
     } = req.body;
 
@@ -48,18 +47,18 @@ exports.signup = async (req, res) => {
     }
 
     // Handle image upload to Cloudinary
-    let uploadedImage;
-    if (image) {
-      try {
-        uploadedImage = await cloudinary.uploader.upload(image, {
-          folder: 'user_profiles',
-          resource_type: 'image',
-        });
-      } catch (uploadError) {
-        console.error(uploadError);
-        return res.status(500).json({ success: false, message: 'Image upload failed' });
-      }
-    }
+    // let uploadedImage;
+    // if (image) {
+    //   try {
+    //     uploadedImage = await cloudinary.uploader.upload(image, {
+    //       folder: 'user_profiles',
+    //       resource_type: 'image',
+    //     });
+    //   } catch (uploadError) {
+    //     console.error(uploadError);
+    //     return res.status(500).json({ success: false, message: 'Image upload failed' });
+    //   }
+    // }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -71,7 +70,8 @@ exports.signup = async (req, res) => {
       phone,
       password: hashedPassword,
       role,
-      image: uploadedImage ? uploadedImage.secure_url : '',
+      otp
+      // image: uploadedImage ? uploadedImage.secure_url : '',
     });
 
     return res.status(200).json({ success: true, user, message: 'User registered successfully' });
@@ -145,6 +145,7 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, options);
     user.password = undefined;
+    user.token=token;
     return res.status(200).json({ success: true, user, message: 'Login successful' });
   } catch (error) {
     console.error('Login error:', error);

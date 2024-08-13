@@ -1,7 +1,8 @@
-import { inventory } from "../models/inventory";
+const inventory = require("../models/inventory");
+// import mongoose from "mongoose";
 
 // Create new inventory item
-export const createInventory = async (req, res) => {
+module.exports.createInventory = async (req, res) => {
     try {
         const { name, category, description, quantity, unit, price, supplierName, stockLocations } = req.body;
 
@@ -24,23 +25,34 @@ export const createInventory = async (req, res) => {
         });
 
         const savedItem = await newInventoryItem.save();
-        res.status(201).json(savedItem);
+        res.status(201).json({savedItem,message:"success"});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 // Update inventory item
-export const updateInventory = async (req, res) => {
+const mongoose = require('mongoose');
+// const inventory = require('../models/inventory');
+
+module.exports.updateInventory = async (req, res) => {
     const { name, category, description, quantity, unit, price, supplierName } = req.body;
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid inventory ID' });
+    }
+
     try {
-        const inventoryItem = await inventory.findById(req.params.id);
+        const inventoryItem = await inventory.findById(id);
         if (!inventoryItem) {
             return res.status(404).json({ message: 'Inventory item not found' });
         }
 
+        // Update the inventory item
         const updatedItem = await inventory.findByIdAndUpdate(
-            req.params.id,
+            id,
             {
                 name: name || inventoryItem.name,
                 category: category || inventoryItem.category,
@@ -53,6 +65,7 @@ export const updateInventory = async (req, res) => {
             { new: true }
         );
 
+        // Check if the update was successful
         if (!updatedItem) {
             return res.status(404).json({ message: 'Inventory item not found' });
         }
@@ -63,8 +76,9 @@ export const updateInventory = async (req, res) => {
     }
 };
 
+
 // Delete inventory item
-export const deleteInventory = async (req, res) => {
+module.exports.deleteInventory = async (req, res) => {
     try {
         const deletedItem = await inventory.findByIdAndDelete(req.params.id);
         if (!deletedItem) {
@@ -77,7 +91,7 @@ export const deleteInventory = async (req, res) => {
 };
 
 // Get all inventory items
-export const getAllInventory = async (req, res) => {
+module.exports.getAllInventory = async (req, res) => {
     try {
         const inventoryItems = await inventory.find();
         res.status(200).json(inventoryItems);
@@ -87,7 +101,7 @@ export const getAllInventory = async (req, res) => {
 };
 
 // Get inventory item by ID
-export const getInventoryById = async (req, res) => {
+module.exports.getInventoryById = async (req, res) => {
     try {
         const inventoryItem = await inventory.findById(req.params.id);
         if (!inventoryItem) {
@@ -99,8 +113,8 @@ export const getInventoryById = async (req, res) => {
     }
 };
 
-
-export const restockInventory = async (req, res) => {
+// Restock inventory item
+module.exports.restockInventory = async (req, res) => {
     const { quantity } = req.body;
     try {
         const inventoryItem = await inventory.findById(req.params.id);
@@ -116,4 +130,3 @@ export const restockInventory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-

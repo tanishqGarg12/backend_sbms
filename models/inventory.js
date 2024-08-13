@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+const mongoose = require('mongoose');
 
 const inventorySchema = new mongoose.Schema({
     name: {
@@ -27,6 +27,8 @@ const inventorySchema = new mongoose.Schema({
     supplierName: {
         type: String
     },
-
 }, { timestamps: true });
-export const inventory = mongoose.model("inventory", inventorySchema);
+
+const Inventory = mongoose.model('Inventory', inventorySchema);
+
+module.exports = Inventory;

@@ -34,11 +34,11 @@ const UserSchema = new mongoose.Schema({
     },
     confirmPassword: {
         type: String,
-        required: true,
+        // required: true,
     },
      image: {
         type: String,
-        required:true,
+        // required:true,
     },
     otp: {
 		type: String,
