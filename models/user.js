@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema=mongoose.Schema
 
 const UserSchema = new mongoose.Schema({
     firstName: {
@@ -44,7 +45,12 @@ const UserSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
-   
+    history: [
+    { 
+        type: Schema.Types.ObjectId,
+        ref: 'Invoice'
+     }
+    ], 
     token:{
         type:String,
     },

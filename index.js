@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 
 const userRoutes = require("./routers/User");
-const inventoryRoutes=require("./routers/inventory") // Import only the user routes
+const inventoryRoutes=require("./routers/inventory")
+const invoiceRoutes=require("./routers/invoice") 
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -41,6 +42,7 @@ cloudinary.config({
 // Routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/inventory", inventoryRoutes);
+app.use("/api/v1/invoice", invoiceRoutes);
 
 // Default route
 app.get("/", (req, res) => {

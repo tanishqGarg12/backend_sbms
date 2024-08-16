@@ -58,7 +58,7 @@ exports.isUser = async (req, res, next) => {
   try {
     const userDetails = await User.findOne({ email: req.user.email });
 
-    if (userDetails.role !== "User") {
+    if (userDetails.role !== "user") {
       return res.status(401).json({
         success: false,
         message: "This is a protected route for users",
