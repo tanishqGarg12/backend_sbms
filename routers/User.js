@@ -1,13 +1,13 @@
 // routes/auth.js
 
 const express = require('express');
-const { signup, googleSignup, login, sendOtp, changePassword } = require('../controllers/user');
+const { signup, googleSignup, login, sendOtp, changePassword,getAllUsers } = require('../controllers/user');
 const {
   resetPasswordToken,
   resetPassword,
 } = require("../controllers/resetPassword")
 
-const { auth } = require("../middlewares/auth")
+const { auth,isAdmin } = require("../middlewares/auth")
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -28,6 +28,7 @@ router.post("/reset-password-token", resetPasswordToken)
 // Route for resetting user's password after verification
 router.post("/reset-password", resetPassword)
 
+router.get("/getalluser",auth,isAdmin,getAllUsers)
 // Export the router for use in the main application
 module.exports = router
 

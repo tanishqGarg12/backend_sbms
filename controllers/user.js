@@ -30,10 +30,10 @@ exports.signup = async (req, res) => {
       password,
       confirmPassword,
       role,
-      otp,
+      // otp,
     } = req.body;
 
-    if (!firstName || !lastName || !username || !email || !phone || !password || !confirmPassword || !role || !otp) {
+    if (!firstName || !lastName || !username || !email || !phone || !password || !confirmPassword || !role) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
@@ -70,7 +70,7 @@ exports.signup = async (req, res) => {
       phone,
       password: hashedPassword,
       role,
-      otp
+      // otp
       // image: uploadedImage ? uploadedImage.secure_url : '',
     });
 
@@ -238,5 +238,15 @@ exports.changePassword = async (req, res) => {
       message: 'Error occurred while updating password',
       error: error.message,
     });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find(); 
+    return res.status(200).json({ success: true, users });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve users' });
   }
 };
