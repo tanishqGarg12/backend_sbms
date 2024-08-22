@@ -1,192 +1,264 @@
+// const nodemailer = require('nodemailer');
+// const pdf = require('html-pdf');
+// const path = require('path');
+// const fs = require('fs');
+// const Invoice = require('../models/Invoice');
+// const { v4: uuidv4 } = require('uuid');
+
+// // Calculate total cost
+// const calculateTotal = (services, taxRate, discountRate) => {
+//     const subtotal = services.reduce((acc, service) => acc + service.quantity * service.price, 0);
+//     const tax = subtotal * taxRate;
+//     const discount = subtotal * discountRate;
+//     return subtotal + tax - discount;
+// };
+
+// // Create a new invoice
+// exports.createInvoice = async (req, res) => {
+//     try {
+//         const { senderName, senderContact, senderEmail, recipientName, recipientContact, recipientEmail, services, taxRate, discountRate } = req.body;
+
+//         // Validate required fields
+//         if (!senderName || !senderContact || !recipientName || !recipientContact || !senderEmail || !recipientEmail) {
+//             return res.status(400).json({ message: 'Required fields are missing' });
+//         }
+
+//         const total = calculateTotal(services, taxRate, discountRate);
+//         const senderId = uuidv4(); // Generate a new senderId
+
+//         const newInvoice = new Invoice({ senderId, senderName, senderContact, senderEmail, recipientName, recipientContact, recipientEmail, services, taxRate, discountRate, total });
+//         const savedInvoice = await newInvoice.save();
+
+//         // Generate PDF
+//         const pdfPath = path.join(__dirname, '../tmp', `invoice_${savedInvoice._id}.pdf`);
+//         const html = `
+//             <h1>Invoice</h1>
+//             <p><strong>Sender:</strong> ${senderName} <br/> ${senderContact} <br/> ${senderEmail}</p>
+//             <p><strong>Recipient:</strong> ${recipientName} <br/> ${recipientContact} <br/> ${recipientEmail}</p>
+//             <h2>Services</h2>
+//             <table border="1" style="width:100%; border-collapse:collapse;">
+//                 <thead>
+//                     <tr>
+//                         <th>Service Name</th>
+//                         <th>Quantity</th>
+//                         <th>Price</th>
+//                         <th>Amount</th>
+//                     </tr>
+//                 </thead>
+//                 <tbody>
+//                     ${services.map(service => `
+//                         <tr>
+//                             <td>${service.name}</td>
+//                             <td>${service.quantity}</td>
+//                             <td>${service.price.toFixed(2)}</td>
+//                             <td>${(service.quantity * service.price).toFixed(2)}</td>
+//                         </tr>
+//                     `).join('')}
+//                 </tbody>
+//             </table>
+//             <p>Subtotal: ${services.reduce((acc, service) => acc + service.quantity * service.price, 0).toFixed(2)}</p>
+//             <p>Tax: ${total.toFixed(2)}</p>
+//             <p>Discount: ${total * discountRate.toFixed(2)}</p>
+//             <p>Total: ${total.toFixed(2)}</p>
+//         `;
+        
+//         pdf.create(html).toFile(pdfPath, async (err, pdfRes) => {
+//             if (err) {
+//                 console.error('Error generating PDF:', err);
+//                 return res.status(500).json({ message: 'Failed to generate PDF' });
+//             }
+
+//             // Send email with PDF attachment
+//             const transporter = nodemailer.createTransport({
+//                 service: 'Gmail', // Use your email service
+//                 auth: {
+//                     user: 'arushigupta7492@gmail.com', // Your email
+//                     pass: 'kkosaswvnwwvdpnk', // Your email password
+//                 },
+//             });
+
+//             const mailOptions = {
+//                 from: 'arushigupta7492@gmail.com',
+//                 to: recipientEmail, // Send to recipient email
+//                 subject: 'Invoice PDF',
+//                 text: 'Please find the attached invoice.',
+//                 attachments: [
+//                     {
+//                         filename: `invoice_${savedInvoice._id}.pdf`,
+//                         path: pdfPath,
+//                     },
+//                 ],
+//             };
+
+//             transporter.sendMail(mailOptions, (error, info) => {
+//                 if (error) {
+//                     console.error('Error sending email:', error);
+//                     return res.status(500).json({ message: 'Failed to send email' });
+//                 }
+
+//                 // Cleanup
+//                 fs.unlinkSync(pdfPath);
+
+//                 res.status(201).json(savedInvoice);
+//             });
+//         });
+//     } catch (error) {
+//         console.error('Error saving invoice:', error);
+//         res.status(500).json({ message: 'Failed to save invoice', error: error.message });
+//     }
+// };
+
+// // Get all invoices
+// exports.getAllInvoices = async (req, res) => {
+//     try {
+//         const invoices = await Invoice.find();
+//         res.status(200).json(invoices);
+//     } catch (error) {
+//         console.error('Error fetching invoices:', error);
+//         res.status(500).json({ message: 'Failed to fetch invoices' });
+//     }
+// };
+const nodemailer = require('nodemailer');
+const pdf = require('html-pdf');
+const path = require('path');
+const fs = require('fs');
 const Invoice = require('../models/invoice');
-const User = require('../models/user');
+const { v4: uuidv4 } = require('uuid');
 
-// Get all invoices for a user
-exports.getInvoices = async (req, res) => {
-  try {
-    const invoices = await Invoice.find({ user: req.user.id });
-    res.status(200).json(invoices);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching invoices', error });
-  }
-};
-
-// Get a single invoice by ID
-exports.getInvoiceById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const invoice = await Invoice.findById(id);
-    if (!invoice || invoice.user.toString() !== req.user.id) {
-      return res.status(404).json({ message: 'Invoice not found' });
-    }
-    res.status(200).json(invoice);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching invoice', error });
-  }
-};
-exports.createInvoice = async (req, res) => {
-  try {
-    const { items, discount = 0, tax = 0 } = req.body;
-    const userId = req.user.id; // Adjust based on how you access user info
-
-    // Validate items
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'Items are required and must be an array' });
-    }
-
-    // Calculate total amount
-    let totalAmount = items.reduce((sum, item) => {
-      return sum + (item.total_price || 0);
-    }, 0);
-
-    totalAmount = totalAmount - discount + tax;
-
-    if (isNaN(totalAmount)) {
-      return res.status(400).json({ message: 'Calculated total amount is not a number' });
-    }
-
-    // Create new invoice
-    const invoice = new Invoice({
-      customer: userId,
-      items,
-      discount,
-      tax,
-      total_amount: totalAmount
-    });
-
-    await invoice.save();
-
-    // Update user history
-    const user = await User.findById(userId);
-    if (user) {
-      if (!Array.isArray(user.history)) {
-        user.history = [];
-      }
-      user.history.push(invoice._id);
-      await user.save();
-    } else {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(201).json({ message: 'Invoice created successfully', invoice });
-  } catch (error) {
-    console.error('Error details:', error);
-    res.status(500).json({ message: 'Error creating invoice', error: error.message || error });
-  }
+// Calculate total cost
+const calculateTotal = (services, taxRate, discountRate) => {
+    const subtotal = services.reduce((acc, service) => acc + service.quantity * service.price, 0);
+    const tax = subtotal * taxRate;
+    const discount = subtotal * discountRate;
+    return subtotal + tax - discount;
 };
 
 // Create a new invoice
-// exports.createInvoice = async (req, res) => {
-//   try {
-//     const { items, discount , tax  } = req.body;
-//     const userId = req.user.id; // Adjust based on how you access user info
-    
-//         const total_amount = items.reduce((sum, item) => sum + item.total_price, 0) - discount + tax;
-//     // Validate items
-//     if (!Array.isArray(items) || items.length === 0) {
-//       return res.status(400).json({ message: 'Items are required and must be an array' });
-//     }
+exports.createInvoice = async (req, res) => {
+    try {
+        const { senderName, senderContact, senderEmail, recipientName, recipientContact, recipientEmail, services, taxRate, discountRate } = req.body;
 
-//     // Create new invoice
-//     const invoice = new Invoice({
-//       customer: userId,
-//       items,
-//       discount,
-//       tax,
-//       total_amount
-//     });
+        // Validate required fields
+        if (!senderName || !senderContact || !recipientName || !recipientContact || !senderEmail || !recipientEmail) {
+            return res.status(400).json({ message: 'Required fields are missing' });
+        }
 
-//     await invoice.save();
+        const total = calculateTotal(services, taxRate, discountRate);
+        const senderId = uuidv4(); // Generate a new senderId
 
-//     // Update user history
-//     const user = await User.findById(userId);
-//     if (user) {
-//       user.history.push(invoice._id);
-//       await user.save();
-//     } else {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
+        const newInvoice = new Invoice({
+            senderId,
+            senderName,
+            senderContact,
+            senderEmail,
+            recipientName,
+            recipientContact,
+            recipientEmail,
+            services,
+            taxRate,
+            discountRate,
+            total
+        });
 
-//     res.status(201).json({ message: 'Invoice created successfully', invoice });
-//   } catch (error) {
-//     console.error('Error details:', error); // Enhanced logging
-//     res.status(500).json({ message: 'Error creating invoice', error: error.message || error });
-//   }
-// };
+        const savedInvoice = await newInvoice.save();
+        console.log('Invoice saved successfully:', savedInvoice);
 
-// exports.createInvoice = async (req, res) => {
-//   try {
-//     const { items, discount, tax } = req.body;
-//     const id=token._id
+        // Generate PDF
+        const pdfPath = path.join(__dirname, '../tmp', `invoice_${savedInvoice._id}.pdf`);
+        const html = `
+            <h1>Invoice</h1>
+            <p><strong>Sender:</strong> ${senderName} <br/> ${senderContact} <br/> ${senderEmail}</p>
+            <p><strong>Recipient:</strong> ${recipientName} <br/> ${recipientContact} <br/> ${recipientEmail}</p>
+            <h2>Services</h2>
+            <table border="1" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th>Service Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${services.map(service => `
+                        <tr>
+                            <td>${service.name}</td>
+                            <td>${service.quantity}</td>
+                            <td>${service.price.toFixed(2)}</td>
+                            <td>${(service.quantity * service.price).toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <p>Subtotal: ${services.reduce((acc, service) => acc + service.quantity * service.price, 0).toFixed(2)}</p>
+            <p>Tax: ${(services.reduce((acc, service) => acc + service.quantity * service.price, 0) * taxRate).toFixed(2)}</p>
+            <p>Discount: ${(services.reduce((acc, service) => acc + service.quantity * service.price, 0) * discountRate).toFixed(2)}</p>
+            <p>Total: ${total.toFixed(2)}</p>
+        `;
 
-//     // Calculate total amount
+        pdf.create(html).toFile(pdfPath, async (err, pdfRes) => {
+            if (err) {
+                console.error('Error generating PDF:', err);
+                return res.status(500).json({ message: 'Failed to generate PDF', error: err.message });
+            }
 
-//     // Create new invoice
-//     const invoice = new Invoice({
-//       user: req.user.id,
-//       items,
-//       // discount,
-//       // tax,
-//       // total_amount
-//     });
+            console.log('PDF generated successfully:', pdfRes);
 
-//     await invoice.save();
-// // 
-//     // Update user history
-//     const user = await User.findById(req.user.id);
-//     user.history.push(invoice._id);
-//     await user.save();
+            // Send email with PDF attachment
+            const transporter = nodemailer.createTransport({
+                service: 'Gmail',
+                auth: {
+                    user: 'arushigupta7492@gmail.com',
+                    pass: 'kkosaswvnwwvdpnk',
+                },
+            });
 
-//     res.status(201).json({ message: 'Invoice created successfully', invoice });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error creating invoice', error });
-//   }
-// };
+            const mailOptions = {
+                from:'arushigupta7492@gmail.com',
+                to: recipientEmail,
+                subject: 'Invoice PDF',
+                text: 'Please find the attached invoice.',
+                attachments: [
+                    {
+                        filename: `invoice_${savedInvoice._id}.pdf`,
+                        path: pdfPath,
+                    },
+                ],
+            };
 
-// Update an existing invoice
-exports.updateInvoice = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { items, discount, tax } = req.body;
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending email:', error);
+                    return res.status(500).json({ message: 'Failed to send email', error: error.message });
+                }
 
-    const invoice = await Invoice.findById(id);
-    if (!invoice || invoice.user.toString() !== req.user.id) {
-      return res.status(404).json({ message: 'Invoice not found' });
+                console.log('Email sent successfully:', info);
+
+                // Cleanup
+                fs.unlink(pdfPath, (err) => {
+                    if (err) {
+                        console.error('Error deleting PDF:', err);
+                    } else {
+                        console.log('PDF deleted successfully');
+                    }
+                });
+
+                res.status(201).json(savedInvoice);
+            });
+        });
+    } catch (error) {
+        console.error('Error processing request:', error);
+        res.status(500).json({ message: 'Failed to process request', error: error.message });
     }
-
-    // Update invoice items and calculate total amount
-    invoice.items = items || invoice.items;
-    invoice.discount = discount !== undefined ? discount : invoice.discount;
-    invoice.tax = tax !== undefined ? tax : invoice.tax;
-    invoice.total_amount = invoice.items.reduce((sum, item) => sum + item.total_price, 0) - invoice.discount + invoice.tax;
-
-    await invoice.save();
-
-    res.status(200).json({ message: 'Invoice updated successfully', invoice });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating invoice', error });
-  }
 };
 
-// Delete an invoice
-exports.deleteInvoice = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const invoice = await Invoice.findById(id);
-    if (!invoice || invoice.user.toString() !== req.user.id) {
-      return res.status(404).json({ message: 'Invoice not found' });
+// Get all invoices
+exports.getAllInvoices = async (req, res) => {
+    try {
+        const invoices = await Invoice.find();
+        res.status(200).json(invoices);
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        res.status(500).json({ message: 'Failed to fetch invoices', error: error.message });
     }
-
-    await invoice.remove();
-
-    // Update user history
-    const user = await User.findById(req.user.id);
-    user.history.pull(invoice._id);
-    await user.save();
-
-    res.status(200).json({ message: 'Invoice deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting invoice', error });
-  }
 };
