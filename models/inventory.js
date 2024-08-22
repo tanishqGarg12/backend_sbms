@@ -9,8 +9,9 @@ const inventorySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    description: {
-        type: String
+    subcategory: {
+        type: String,
+        required:true
     },
     quantity: {
         type: Number,
@@ -23,10 +24,7 @@ const inventorySchema = new mongoose.Schema({
     price: {
         type: Number,
         required: true
-    },
-    supplierName: {
-        type: String
-    },
+    }
 }, { timestamps: true });
 
 const Inventory = mongoose.model('Inventory', inventorySchema);

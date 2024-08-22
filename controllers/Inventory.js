@@ -4,32 +4,51 @@ const inventory = require("../models/inventory");
 // Create new inventory item
 module.exports.createInventory = async (req, res) => {
     try {
-        const { name, category, description, quantity, unit, price, supplierName, stockLocations } = req.body;
+        const { name, category, quantity, unit, price, subcategory } = req.body;
 
+        // Validate required fields
         if (!name || !category || !unit || !price) {
             return res.status(400).json({ message: 'Fill all required details.' });
         }
+
+        // Validate non-negative values
         if (quantity < 0 || price < 0) {
             return res.status(400).json({ message: 'Quantity and price must be non-negative.' });
         }
 
+        // Create new inventory item
         const newInventoryItem = new inventory({
             name,
             category,
-            description,
+            subcategory,
             quantity,
             unit,
             price,
-            supplierName,
-            stockLocations
+            // Optional fields
+            // supplierName,
+            // stockLocations
         });
 
+        // Save item to database
         const savedItem = await newInventoryItem.save();
-        res.status(201).json({savedItem,message:"success"});
+
+        // Respond with the saved item and a success message
+        res.status(201).json({ 
+            _id: savedItem._id, // Ensure _id is included
+            name: savedItem.name,
+            category: savedItem.category,
+            subcategory: savedItem.subcategory,
+            quantity: savedItem.quantity,
+            unit: savedItem.unit,
+            price: savedItem.price,
+            message: "Item created successfully"
+        });
     } catch (error) {
+        // Handle server errors
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Update inventory item
 const mongoose = require('mongoose');
@@ -80,13 +99,22 @@ module.exports.updateInventory = async (req, res) => {
 // Delete inventory item
 module.exports.deleteInventory = async (req, res) => {
     try {
-        const deletedItem = await inventory.findByIdAndDelete(req.params.id);
+        // Ensure req.params.id is a valid ObjectId
+        const id = req.params.id;
+        console.log(id)
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid ID format' });
+        }
+
+        // Find and delete the inventory item by ObjectId
+        const deletedItem = await inventory.findByIdAndDelete(id);
         if (!deletedItem) {
             return res.status(404).json({ message: 'Inventory item not found' });
         }
+
         res.status(200).json({ message: 'Inventory item deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
 
