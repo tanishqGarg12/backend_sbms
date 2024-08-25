@@ -158,3 +158,19 @@ module.exports.restockInventory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+module.exports.getLowStockItems = async (req, res) => {
+    try {
+        // Fetch all inventory items
+        const inventoryItems = await inventory.find();
+
+        // Filter items with quantity less than 5
+        const lowStockItems = inventoryItems.filter(item => item.quantity <10);
+
+        // Respond with low-stock items
+        res.status(200).json(lowStockItems);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

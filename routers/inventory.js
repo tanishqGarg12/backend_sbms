@@ -5,7 +5,8 @@ const {
     deleteInventory,
     getAllInventory,
     getInventoryById,
-    restockInventory
+    restockInventory,
+    getLowStockItems
 } = require('../controllers/Inventory');
 
 const router = express.Router();
@@ -21,6 +22,8 @@ router.delete('/inventory/:id', deleteInventory);
 
 // Get all inventory items
 router.get('/getallinventory', getAllInventory);
+
+router.get('/getlowinventory', getLowStockItems);
 
 // Get inventory item by ID
 router.get('/getinventory/:id', getInventoryById);
