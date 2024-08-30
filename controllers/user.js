@@ -145,7 +145,10 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, options);
     user.password = undefined;
+    // console.log(token)
     user.token=token;
+    console.log("after logging in"+ user.token)
+    // console.log(cookie.token)
     return res.status(200).json({ success: true, user, message: 'Login successful' });
   } catch (error) {
     console.error('Login error:', error);

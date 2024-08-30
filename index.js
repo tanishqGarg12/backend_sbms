@@ -1,14 +1,14 @@
 const express = require("express");
 const app = express();
-
 const userRoutes = require("./routers/User");
 const inventoryRoutes=require("./routers/inventory")
 const invoiceRoutes=require("./routers/invoice")
 const testimonialRoutes=require("./routers/testimonialRoutes") 
+const cartRoutes=require("./routers/cart")
 const database = require("./config/database");
-
+const cors=require("cors")
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
+// const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
 const cloudinary = require('cloudinary').v2;
@@ -21,13 +21,14 @@ const PORT = 4000;
 // Database connection
 database.connect();
 
+app.use(cors({
+    origin: 'http://localhost:3000', // Your frontend domain
+    credentials: true,
+  }));
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-}));
+
 
 app.use(fileUpload({
     useTempFiles: true,
@@ -46,6 +47,7 @@ app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/invoice", invoiceRoutes);
 app.use("/api/v1/testimonial", testimonialRoutes);
+app.use("/api/v1/cart",cartRoutes)
 
 // Default route
 app.get("/", (req, res) => {

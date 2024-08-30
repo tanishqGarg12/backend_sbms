@@ -128,6 +128,13 @@ module.exports.getAllInventory = async (req, res) => {
     }
 };
 
+
+// app.post("/editcategory",async function(req,res){
+//     const categoryobj =db.coolection("category");
+//     const 
+// })
+
+
 // Get inventory item by ID
 module.exports.getInventoryById = async (req, res) => {
     try {
