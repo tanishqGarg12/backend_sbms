@@ -1,6 +1,6 @@
 const express = require('express');
 const { signup, googleSignup, login, sendOtp, changePassword, getAllUsers } = require('../controllers/user');
-const { resetPasswordToken, resetPassword } = require("../controllers/resetPassword");
+const { forgotPassword, resetPassword } = require("../controllers/resetPassword");
 const { auth, isAdmin } = require("../middlewares/auth");
 const router = express.Router();
 
@@ -12,8 +12,8 @@ router.post('/send-otp', sendOtp);
 router.post('/change-password', auth, changePassword);
 
 // Reset Password routes
-router.post("/reset-password-token", resetPasswordToken);
-router.post("/reset-password", resetPassword);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
 
 // Admin routes
 router.get("/getalluser", auth, isAdmin, getAllUsers);
