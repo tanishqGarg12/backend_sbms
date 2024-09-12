@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
-        unique: true,
+        // unique: true,
     },
     role: {
         type: String,
@@ -51,12 +51,8 @@ const UserSchema = new mongoose.Schema({
         ref: 'Invoice'
      }
     ], 
-    token:{
-        type:String,
-    },
-    resetPasswordExpires:{
-type:Date,
-    },
-});
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

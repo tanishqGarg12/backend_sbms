@@ -1,67 +1,36 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/user');
-const OTP = require('../models/otp');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const otpGenerator = require('otp-generator');
+const User = require('../models/user');
 const { OAuth2Client } = require('google-auth-library');
-const cloudinary = require('cloudinary').v2;
-const { passwordUpdated } = require("../mail/templates/passwordUpdate")
+const otpGenerator = require('otp-generator');
 require('dotenv').config();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Google OAuth2 client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// User signup with image upload and OTP verification
 exports.signup = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      username,
-      email,
-      phone,
-      password,
-      confirmPassword,
-      role,
-      // otp,
-    } = req.body;
+    const { firstName, lastName, username, email, phone, password, confirmPassword, role } = req.body;
 
-    if (!firstName || !lastName || !username || !email || !phone || !password || !confirmPassword || !role) {
+    // Check if all fields are filled
+    if (!firstName || !lastName || !username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
+    // Check if passwords match
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
     }
 
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
-    // Handle image upload to Cloudinary
-    // let uploadedImage;
-    // if (image) {
-    //   try {
-    //     uploadedImage = await cloudinary.uploader.upload(image, {
-    //       folder: 'user_profiles',
-    //       resource_type: 'image',
-    //     });
-    //   } catch (uploadError) {
-    //     console.error(uploadError);
-    //     return res.status(500).json({ success: false, message: 'Image upload failed' });
-    //   }
-    // }
-
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create new user
     const user = await User.create({
       firstName,
       lastName,
@@ -69,17 +38,16 @@ exports.signup = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role,
-      // otp
-      // image: uploadedImage ? uploadedImage.secure_url : '',
+      role: role === 'admin' ? 'admin' : 'user', // Assign role based on checkbox
     });
 
     return res.status(200).json({ success: true, user, message: 'User registered successfully' });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: 'User registration failed' });
+    console.error('Signup error:', error);
+    return res.status(500).json({ success: false, message: 'User registration failed', error: error.message });
   }
 };
+// Additional methods for Google signup, login, OTP, and password change go here...
 
 // Google sign-up
 exports.googleSignup = async (req, res) => {
