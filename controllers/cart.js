@@ -4,7 +4,8 @@ const Inventory = require('../models/inventory');
 
 exports.getCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ userId: req.user._id }).populate('items.productId');
+    // console.log("user is "+req.user.user);
+    const cart = await Cart.findOne({ userId: req.user.id }).populate('items.productId');
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -15,18 +16,19 @@ exports.getCart = async (req, res) => {
 };
 
 exports.addItemToCart = async (req, res) => {
-  const { productId,quantity} = req.body;
+  const { productId,quantity,id} = req.body;
 //   console.log(productId)
 
   try {
+    // console.log("user isssss "+user.user)
     const product = await Inventory.findById(productId);
     // console.log(product)
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    console.log("user id is "+ req.body._id )
+    console.log("user id is "+ id)
     // cosnole.log("heloo")
-    let cart = await Cart.findOne({ userId: req.user._id });
+    let cart = await Cart.findOne({ userId: id});
     // console.log(cart)
 
     if (cart) {
@@ -47,7 +49,7 @@ exports.addItemToCart = async (req, res) => {
       }
     } else {
       cart = new Cart({
-        // userId: req.user._id,
+        userId: id,
         items: [{
           productId,
           name: product.name,

@@ -5,7 +5,8 @@ require("dotenv").config();
 // Middleware to authenticate user requests
 exports.auth = async (req, res, next) => {
   try {
-    console.log("body"+req.body );
+    // console.log("body"+req.body );
+    console.log("sdfcvgfdsa"+req.cookies.token);
     const token =
       req.cookies.token ||
       req.body.token ||
@@ -19,7 +20,10 @@ exports.auth = async (req, res, next) => {
 
     try {
       const decode = await jwt.verify(token, process.env.JWT_SECRET);
+      console.log("decode is"+decode.id);
       req.user = decode;
+      console.log("user is "+ req.user);
+      console.log("suxesssssssssssss")
     } catch (error) {
       console.error('Token Verification Error:', error);
       return res

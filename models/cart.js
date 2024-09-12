@@ -34,12 +34,12 @@ const cartSchema = new mongoose.Schema({
   items: [cartItemSchema],
   totalQuantity: {
     type: Number,
-    required: true,
+    // required: true,
     default: 0,
   },
   totalPrice: {
     type: Number,
-    required: true,
+    // required: true,
     default: 0,
   },
   createdAt: {

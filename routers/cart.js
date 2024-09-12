@@ -5,7 +5,7 @@ const { isUser,auth } = require('../middlewares/auth'); // Assuming you have a m
 const router = express.Router();
 
 // Get Cart for the logged-in user
-router.get('/',  isUser, cartController.getCart);
+router.get('/',auth,isUser,cartController.getCart);
 
 // Add Item to Cart
 router.post('/add',auth,isUser, cartController.addItemToCart);
