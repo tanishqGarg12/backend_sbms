@@ -181,3 +181,29 @@ module.exports.getLowStockItems = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+module.exports.search = async (req, res) => {
+    try {
+        const searchQuery = req.query.query || ''; // Get the search query from query parameters
+
+        // If searchQuery is empty, fetch all inventory items
+        const query = searchQuery 
+            ? { name: { $regex: searchQuery, $options: 'i' } }
+            : {};
+
+        // MongoDB query to find matching inventory items
+        const searchResults = await inventory.find(query);
+
+        // Return search results
+        res.status(200).json({
+            success: true,
+            results: searchResults,
+        });
+    } catch (err) {
+        console.error('Error searching inventory:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Error searching inventory',
+        });
+    }
+};

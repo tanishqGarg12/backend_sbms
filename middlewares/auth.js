@@ -74,7 +74,7 @@ exports.isUser = async (req, res, next) => {
         message: "This is a protected route for users",
       });
     }
-
+    console.log("in the user panel")
     next();
   } catch (error) {
     return res.status(500).json({

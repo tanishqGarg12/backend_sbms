@@ -6,7 +6,8 @@ const {
     getAllInventory,
     getInventoryById,
     restockInventory,
-    getLowStockItems
+    getLowStockItems,
+    search
 } = require('../controllers/Inventory');
 
 const router = express.Router();
@@ -28,6 +29,7 @@ router.get('/getlowinventory', getLowStockItems);
 // Get inventory item by ID
 router.get('/getinventory/:id', getInventoryById);
 
+router.get('/search',search)
 // Restock inventory item by ID
 router.patch('/restockinventory/:id/restock', restockInventory);
 
