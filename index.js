@@ -5,6 +5,7 @@ const inventoryRoutes=require("./routers/inventory")
 const invoiceRoutes=require("./routers/invoice")
 const testimonialRoutes=require("./routers/testimonialRoutes") 
 const cartRoutes=require("./routers/cart")
+const paymentRoutes=require("./routers/paymentRoutes")
 const database = require("./config/database");
 const cors=require("cors")
 const cookieParser = require("cookie-parser");
@@ -42,12 +43,18 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// export const instance = new Razorpay({
+//     key_id: process.env.RAZORPAY_API_KEY,
+//     key_secret: process.env.RAZORPAY_APT_SECRET,
+//   });
+
 // // Routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/invoice", invoiceRoutes);
 app.use("/api/v1/testimonial", testimonialRoutes);
 app.use("/api/v1/cart",cartRoutes)
+app.use("/api/v1/pay",paymentRoutes)
 
 // Default route
 app.get("/", (req, res) => {

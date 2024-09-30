@@ -4,7 +4,7 @@ const inventory = require("../models/inventory");
 // Create new inventory item
 module.exports.createInventory = async (req, res) => {
     try {
-        const { name, category, quantity, unit, price, subcategory } = req.body;
+        const { name, category, quantity, unit,  purchasedprice , price, subcategory } = req.body;
 
         // Validate required fields
         if (!name || !category || !unit || !price) {
@@ -23,6 +23,7 @@ module.exports.createInventory = async (req, res) => {
             subcategory,
             quantity,
             unit,
+            purchasedprice,
             price,
             // Optional fields
             // supplierName,
@@ -38,6 +39,7 @@ module.exports.createInventory = async (req, res) => {
             name: savedItem.name,
             category: savedItem.category,
             subcategory: savedItem.subcategory,
+            purchasedprice:savedItem.purchasedprice,
             quantity: savedItem.quantity,
             unit: savedItem.unit,
             price: savedItem.price,
@@ -55,7 +57,7 @@ const mongoose = require('mongoose');
 // const inventory = require('../models/inventory');
 
 module.exports.updateInventory = async (req, res) => {
-    const { name, category, description, quantity, unit, price, supplierName } = req.body;
+    const { name, category, description, purchasedprice,quantity, unit, price, supplierName } = req.body;
     const { id } = req.params;
 
     // Validate ObjectId
@@ -78,6 +80,7 @@ module.exports.updateInventory = async (req, res) => {
                 description: description || inventoryItem.description,
                 quantity: quantity !== undefined ? quantity : inventoryItem.quantity,
                 unit: unit || inventoryItem.unit,
+                purchasedprice:purchasedprice,
                 price: price !== undefined ? price : inventoryItem.price,
                 supplierName: supplierName || inventoryItem.supplierName,
             },
@@ -128,6 +131,38 @@ module.exports.getAllInventory = async (req, res) => {
     }
 };
 
+
+module.exports.getAllInventoryc = async (req, res) => {
+    try {
+        // MongoDB aggregation to group by category and subcategory
+        const groupedInventory = await inventory.aggregate([
+            {
+                $group: {
+                    _id: { category: "$category", subcategory: "$subcategory" }, // Group by category and subcategory
+                    totalQuantity: { $sum: "$quantity" }, // Sum of quantity for each group
+                    items: {
+                        $push: {
+                            name: "$name",
+                            quantity: "$quantity",
+                            purchasedPrice: "$purchasedprice",
+                            sellingPrice: "$price",
+                            addedTime: "$createdAt",
+                            updatedTime: "$updatedAt",
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { "_id.category": 1, "_id.subcategory": 1 } // Sort the results by category and subcategory
+            }
+        ]);
+
+        // Send grouped inventory data as response
+        res.status(200).json(groupedInventory);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // app.post("/editcategory",async function(req,res){
 //     const categoryobj =db.coolection("category");
@@ -204,6 +239,139 @@ module.exports.search = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error searching inventory',
+        });
+    }
+};
+
+// Get total stock for each category
+module.exports.getCategoryWiseStock = async (req, res) => {
+    try {
+        // Use MongoDB aggregation to group by category and sum the quantities
+        const categoryWiseStock = await inventory.aggregate([
+            {
+                $group: {
+                    _id: "$category", // Group by category
+                    totalStock: { $sum: "$quantity" } // Sum the quantities in each category
+                }
+            },
+            {
+                $project: {
+                    category: "$_id", // Rename _id to category
+                    totalStock: 1,
+                    _id: 0 // Exclude the default _id field
+                }
+            }
+        ]);
+
+        // Respond with the aggregated data
+        res.status(200).json({
+            success: true,
+            data: categoryWiseStock
+        });
+    } catch (error) {
+        console.error('Error getting category-wise stock:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting category-wise stock'
+        });
+    }
+};
+// http://localhost:4000/api/v1/inventory/getpurchasedprice
+// http://localhost:4000/api/v1/inventory/gettotal
+// http://localhost:4000/api/v1/inventory/getnewitems
+// http://localhost:4000/api/v1/inventory/getmonthwise
+// Get total purchased value for each category
+module.exports.getCategoryWisePurchasedValue = async (req, res) => {
+    try {
+        // Use MongoDB aggregation to group by category and sum the purchased values
+        const categoryWisePurchasedValue = await inventory.aggregate([
+            {
+                $match: {
+                    purchasedprice: { $gt: 0 } // Match only items with a purchased price greater than 0
+                }
+            },
+            {
+                $group: {
+                    _id: "$category", // Group by category
+                    totalPurchasedValue: { $sum: { $multiply: ["$quantity", "$purchasedprice"] } } // Sum the total value of purchased items
+                }
+            },
+            {
+                $project: {
+                    category: "$_id", // Rename _id to category
+                    totalPurchasedValue: 1,
+                    _id: 0 // Exclude the default _id field
+                }
+            }
+        ]);
+
+        // Respond with the aggregated data
+        res.status(200).json({
+            success: true,
+            data: categoryWisePurchasedValue
+        });
+    } catch (error) {
+        console.error('Error getting category-wise purchased value:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting category-wise purchased value'
+        });
+    }
+};
+
+// Get new inventory items added in the last two days
+module.exports.getNewItemsLastTwoDays = async (req, res) => {
+    try {
+        const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // Calculate date for two days ago
+        
+        // Fetch items added in the last two days
+        const newItems = await inventory.find({
+            createdAt: { $gte: twoDaysAgo } // Filter for items created at or after the calculated date
+        });
+        const z=newItems.length
+
+        // Respond with the new items
+        res.status(200).json({
+            success: true,
+            data: z
+        });
+    } catch (error) {
+        console.error('Error fetching new items:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching new items'
+        });
+    }
+};
+
+// Get total purchase price month-wise
+module.exports.getMonthlyPurchasePrice = async (req, res) => {
+    try {
+        const result = await inventory.aggregate([
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" }, // Extract the year
+                        month: { $month: "$createdAt" } // Extract the month
+                    },
+                    totalPurchasedPrice: { $sum: { $multiply: ["$quantity", "$purchasedprice"] } } // Calculate total purchased price
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 } // Sort by year and month
+            }
+        ]);
+
+        // Respond with the result
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('Error fetching monthly purchase price:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching monthly purchase price'
         });
     }
 };

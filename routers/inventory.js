@@ -7,7 +7,12 @@ const {
     getInventoryById,
     restockInventory,
     getLowStockItems,
-    search
+    search,
+    getCategoryWisePurchasedValue,
+    getCategoryWiseStock,
+    getNewItemsLastTwoDays,
+    getMonthlyPurchasePrice,
+    getAllInventoryc
 } = require('../controllers/Inventory');
 
 const router = express.Router();
@@ -23,6 +28,11 @@ router.delete('/inventory/:id', deleteInventory);
 
 // Get all inventory items
 router.get('/getallinventory', getAllInventory);
+router.get('/getallinventoryc', getAllInventoryc);
+router.get('/gettotal', getCategoryWiseStock);
+router.get('/getmonthwise', getMonthlyPurchasePrice);
+router.get('/getnewitems', getNewItemsLastTwoDays);
+router.get('/getpurchasedprice',getCategoryWisePurchasedValue);
 
 router.get('/getlowinventory', getLowStockItems);
 

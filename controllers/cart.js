@@ -1,5 +1,6 @@
 const Cart = require('../models/cart');
 const Inventory = require('../models/inventory');
+const mongoose = require('mongoose');
 
 
 exports.getCart = async (req, res) => {
@@ -92,23 +93,64 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
+
+// const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
+
 exports.removeItemFromCart = async (req, res) => {
-  const { productId } = req.body;
+  const { id } = req.body; // This is the product ID you want to remove
 
   try {
-    let cart = await Cart.findOne({ userId: req.user._id });
-    if (!cart) {
+    console.log("User ID: " + req.user.id); // For debugging
+    console.log("Product ID to remove: " + id);
+
+    // Convert the product id from the request body to ObjectId
+    const objectIdToRemove = new mongoose.Types.ObjectId(id);
+    console.log("main id: " + objectIdToRemove);
+
+    // Find the cart by userId and remove the item with the matching productId using $pull
+    const updatedCart = await Cart.findOneAndUpdate(
+      { userId: req.user.id }, // Match by userId
+      { $pull: { items: { _id: objectIdToRemove } } }, // Pull item from items array
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedCart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+    // Check if the cart has any remaining items
+    if (updatedCart.items.length === 0) {
+      // If no items are left, set quantity and amount to 0
+      updatedCart.quantity = 0;
+      updatedCart.amount = 0;
+    } else {
+      // Otherwise, recalculate the total quantity and amount
+      let newQuantity = 0;
+      let newAmount = 0;
 
-    await cart.save();
-    res.status(200).json(cart);
+      updatedCart.items.forEach(item => {
+        newQuantity += item.quantity;
+        newAmount += item.total;
+      });
+
+      updatedCart.quantity = newQuantity;
+      updatedCart.amount = newAmount;
+    }
+
+    // Save the updated cart with new quantity and amount
+    await updatedCart.save();
+
+    console.log("Updated Cart after deletion:", updatedCart);
+
+    // Return the updated cart
+    return res.status(200).json(updatedCart);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    // Handle server errors
+    return res.status(500).json({ message: 'Server Error', error });
   }
 };
+
 
 
 exports.clearCart = async (req, res) => {

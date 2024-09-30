@@ -14,7 +14,7 @@ router.post('/add',auth,isUser, cartController.addItemToCart);
 router.put('/update', isUser, cartController.updateCartItem);
 
 // Remove Item from Cart
-router.delete('/remove',  isUser, cartController.removeItemFromCart);
+router.delete('/remove', auth, isUser, cartController.removeItemFromCart);
 
 // Clear Cart
 router.delete('/clear',  isUser, cartController.clearCart);
