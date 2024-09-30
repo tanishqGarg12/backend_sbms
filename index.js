@@ -5,6 +5,7 @@ const inventoryRoutes=require("./routers/inventory")
 const invoiceRoutes=require("./routers/invoice")
 const testimonialRoutes=require("./routers/testimonialRoutes") 
 const cartRoutes=require("./routers/cart")
+const CategiryRoutes=require("./routers/categorySubcategoryRoutes")
 const paymentRoutes=require("./routers/paymentRoutes")
 const database = require("./config/database");
 const cors=require("cors")
@@ -54,6 +55,7 @@ app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/invoice", invoiceRoutes);
 app.use("/api/v1/testimonial", testimonialRoutes);
 app.use("/api/v1/cart",cartRoutes)
+app.use("/api/v1/categoryy",CategiryRoutes)
 app.use("/api/v1/pay",paymentRoutes)
 
 // Default route

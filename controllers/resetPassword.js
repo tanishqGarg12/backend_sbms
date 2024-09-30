@@ -9,16 +9,18 @@ exports.forgotPassword = async (req, res) => {
     
     try {
         const user = await User.findOne({ email });
+        // console.log("user is"+user)
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         const token = crypto.randomBytes(32).toString('hex');
+        console.log("token"+token)
 
         user.resetPasswordToken = token;
         user.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
         await user.save();
-
+        
         // Send email with nodemailer
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -27,7 +29,11 @@ exports.forgotPassword = async (req, res) => {
                 pass: process.env.EMAIL_PASS,
             },
         });
-
+        console.log(process.env.EMAIL_USER)
+        console.log(process.env.EMAIL_PASS)
+        // console.log(transporter)
+        console.log(user.email)
+        
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: user.email,
@@ -36,8 +42,18 @@ exports.forgotPassword = async (req, res) => {
             Please click on the following link to complete the process:
             ${process.env.CLIENT_URL}/reset-password/${token}`
         };
-
-        await transporter.sendMail(mailOptions);
+        console.log("before the ===========")
+        console.log("mail option are"+mailOptions.to)
+       transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log('Error in sending email  ' + error);
+      return true;
+    } else {
+     console.log('Email sent: ' + info.response);
+     return false;
+    }
+   });
+        console.log("afetr the transport=================")
         console.log('Password reset email sent successfully to', user.email);
 
         return res.status(200).json({ success: true, message: 'Reset email sent' });
