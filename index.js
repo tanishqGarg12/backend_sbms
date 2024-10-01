@@ -44,10 +44,14 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// export const instance = new Razorpay({
-//     key_id: process.env.RAZORPAY_API_KEY,
-//     key_secret: process.env.RAZORPAY_APT_SECRET,
-//   });
+const Razorpay = require("razorpay");
+const instance = new Razorpay({
+    key_id: process.env.RAZORPAY_API_KEY,
+    key_secret: process.env.RAZORPAY_API_SECRET,
+});
+console.log(process.env.RAZORPAY_API_KEY)
+console.log(process.env.RAZORPAY_API_SECRET)
+module.exports = instance;
 
 // // Routes
 app.use("/api/v1/auth", userRoutes);
