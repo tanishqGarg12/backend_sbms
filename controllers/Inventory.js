@@ -362,10 +362,13 @@ module.exports.getMonthlyPurchasePrice = async (req, res) => {
             }
         ]);
 
-        // Respond with the result
+        const length = result.length;
+
+        // Respond with the result and the length
         res.status(200).json({
             success: true,
-            data: result
+            // data: result,
+            length: length
         });
     } catch (error) {
         console.error('Error fetching monthly purchase price:', error);
@@ -375,3 +378,4 @@ module.exports.getMonthlyPurchasePrice = async (req, res) => {
         });
     }
 };
+

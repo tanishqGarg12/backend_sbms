@@ -1,4 +1,4 @@
-const mongoose=require("mongoose")
+const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
   razorpay_order_id: {
@@ -13,9 +13,17 @@ const paymentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-});
-const Payment = mongoose.model("Payment", paymentSchema)
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  amount:{
+    type:Number,
+    required:true
+  }
+}, { timestamps: true });
 
-module.exports = Payment
-;
-// export const Payment = mongoose.model("Payment", paymentSchema);
+const Payment = mongoose.model("Payment", paymentSchema);
+
+module.exports = Payment;

@@ -1,75 +1,188 @@
-const  Payment  = require("../models/paymentModel.js");
-const crypto = require("crypto");
-// const  instance  = require("../index.js");
-const Razorpay = require("razorpay");
-const instance = new Razorpay({
-    key_id: process.env.RAZORPAY_API_KEY,
-    key_secret: process.env.RAZORPAY_API_SECRET,
-});
-const checkout = async (req, res) => {
-  const options = {
-    amount: Number(req.body.amount * 100),
-    currency: "INR",
-  };
-  console.log("instance is"+instance)
-  const order =await instance.orders.create(options);
-  console.log("------------------")
-  console.log(order)
-  res.status(200).json({
-    success: true,
-    order,
+  const Payment = require("../models/paymentModel.js");
+  const crypto = require("crypto");
+  const User = require("../models/user.js");
+  const Razorpay = require("razorpay");
+
+  const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_API_KEY,
+      key_secret: process.env.RAZORPAY_API_SECRET,
   });
-};
-const paymentVerification = async (req, res) => {
-  console.log("------------------------start")
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    // Generate body for signature verification
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    console.log("Verifying Payment with body:", body);
+  // Checkout function: Create an order
+  const checkout = async (req, res) => {
+    const options = {
+      amount: Number(req.body.amount ), // Razorpay expects the amount in paise (smallest currency unit)
+      currency: "INR",
+    };
+    
+    try {
+      console.log("instance is", instance);
+      const order = await instance.orders.create(options);
+      console.log("------------------");
+      console.log(order);
 
-    // Generate the expected signature using HMAC SHA256 and your Razorpay API Secret
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    console.log("Expected Signature:", expectedSignature);
-    console.log("Received Signature:", razorpay_signature);
-
-    // Compare the signatures
-    const isAuthentic = expectedSignature === razorpay_signature;
-    console.log(isAuthentic)
-    if (isAuthentic) {
-      // Save payment details in the database
-      await Payment.create({
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-      });
-
-      // Redirect to a success page
-      console.log("sucess")
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
-        message:"sucss"
-      })
-    } else {
-      // Payment verification failed
-      return res.status(400).json({
+        order,
+      });
+    } catch (error) {
+      console.error("Error in creating order:", error);
+      res.status(500).json({
         success: false,
-        message: "Payment verification failed",
+        message: "Failed to create Razorpay order",
       });
     }
+  };
+
+  // Payment Verification function
+  const paymentVerification = async (req, res) => {
+    console.log("------------------------start");
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, id ,amount} = req.body;
+      console.log("id is"+id)
+      // Generate body for signature verification
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      console.log("Verifying Payment with body:", body);
+
+      // Generate the expected signature using HMAC SHA256 and Razorpay API Secret
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
+        .update(body.toString())
+        .digest("hex");
+
+      console.log("Expected Signature:", expectedSignature);
+      console.log("Received Signature:", razorpay_signature);
+
+      // Compare the signatures
+      const isAuthentic = expectedSignature === razorpay_signature;
+      console.log(isAuthentic);
+
+      if (isAuthentic) {
+        // Save payment details in the database, including userId
+        await Payment.create({
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          userId:id, 
+          amount
+          // Storing the user ID for tracking the user who made the payment
+        });
+
+        console.log("Payment success");
+        return res.status(200).json({
+          success: true,
+          message: "Payment successful",
+        });
+      } else {
+        // Payment verification failed
+        console.log("Payment verification failed");
+        return res.status(400).json({
+          success: false,
+          message: "Payment verification failed",
+        });
+      }
+    } catch (error) {
+      console.error("Error in payment verification:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  };
+  const getAllUsersWithPayments = async (req, res) => {
+    try {
+      // Find all payments and populate user information using 'userId'
+      const payments = await Payment.find().populate('userId', 'firstName lastName email');
+
+      if (!payments.length) {
+        return res.status(404).json({
+          success: false,
+          message: "No payments found",
+        });
+      }
+
+      // Format the response to include user info along with the payment amount
+      const userPayments = payments.map(payment => ({
+        user: payment.userId,  // Populated user info
+        amount: payment.amount,
+        date: payment.createdAt,  // Amount from the payment 
+
+      }));
+
+      res.status(200).json({
+        success: true,
+        userPayments,
+      });
+    } catch (error) {
+      console.error("Error fetching user payments:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  };
+
+  const getTotalAmount = async (req, res) => {
+    try {
+      const totalAmountResult = await Payment.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: "$amount" },
+          },
+        },
+      ]);
+  
+      const totalAmount = totalAmountResult[0]?.totalAmount || 0;
+  
+      res.status(200).json({
+        success: true,
+        totalAmount,
+      });
+    } catch (error) {
+      console.error("Error calculating total amount:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  };
+
+  // Get payments for a specific user by userId
+const getUserPayments = async (req, res) => {
+  try {
+    const { userId } = req.params;  // Get userId from route parameter
+
+    // Find payments for the specific user and populate user information
+    const payments = await Payment.find({ userId }).populate('userId', 'firstName lastName email');
+
+    if (!payments.length) {
+      return res.status(404).json({
+        success: false,
+        message: `No payments found for user with id ${userId}`,
+      });
+    }
+
+    // Format the response to include user info along with the payment amount
+    const userPayments = payments.map(payment => ({
+      user: payment.userId,  // Populated user info (firstName, lastName, email)
+      amount: payment.amount, // Amount from the payment
+      date: payment.createdAt, // Date of payment
+    }));
+
+    res.status(200).json({
+      success: true,
+      userPayments,
+    });
   } catch (error) {
-    console.error("Error in payment verification:", error);
-    return res.status(500).json({
+    console.error("Error fetching user payments:", error);
+    res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
   }
 };
 
-// Correct export syntax for multiple functions
-module.exports = { checkout, paymentVerification };
+  
+
+  module.exports = { checkout,getUserPayments, paymentVerification,getTotalAmount, getAllUsersWithPayments };
