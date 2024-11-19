@@ -5,7 +5,8 @@ const User = require('../models/user');
 
 // Generate random token and send reset password email
 exports.forgotPassword = async (req, res) => {
-    const { email } = req.body;
+    const { email,text } = req.body;
+    console.log(email)
     
     try {
         const user = await User.findOne({ email });
@@ -37,10 +38,8 @@ exports.forgotPassword = async (req, res) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: user.email,
-            subject: 'Password Reset',
-            text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.
-            Please click on the following link to complete the process:
-            ${process.env.CLIENT_URL}/reset-password/${token}`
+            subject: ' WELCOME TO THE HOUSE MANNNNN',
+            text: text
         };
         console.log("before the ===========")
         console.log("mail option are"+mailOptions.to)
