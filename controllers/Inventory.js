@@ -1,10 +1,14 @@
+const mongoose = require('mongoose');
 const inventory = require("../models/inventory");
 // import mongoose from "mongoose";
 
 // Create new inventory item
 module.exports.createInventory = async (req, res) => {
     try {
-        const { name, category, quantity, unit,  purchasedprice , price, subcategory } = req.body;
+        const { name, category, quantity, unit, purchasedprice, price, subcategory,file } = req.body;
+        
+        // console.log("[DEBUG] Request body:", req.body);
+        // console.log("[DEBUG] Request file:", req.file);
 
         // Validate required fields
         if (!name || !category || !unit || !price) {
@@ -16,6 +20,15 @@ module.exports.createInventory = async (req, res) => {
             return res.status(400).json({ message: 'Quantity and price must be non-negative.' });
         }
 
+        // Check if an image was uploaded
+        // console.log("[DEBUG] Uploaded file details:", req.file);
+        // if (!req.file) {
+        //     console.log("no file")
+        //     return res.status(400).json({ message: 'Image is required.' });
+        // }
+
+        // Log file details for debugging
+
         // Create new inventory item
         const newInventoryItem = new inventory({
             name,
@@ -25,35 +38,37 @@ module.exports.createInventory = async (req, res) => {
             unit,
             purchasedprice,
             price,
-            // Optional fields
-            // supplierName,
-            // stockLocations
+            file // Store image path
         });
 
-        // Save item to database
+        // console.log("[DEBUG] New inventory item created:", newInventoryItem);
+
+        // Save the item to the database
         const savedItem = await newInventoryItem.save();
 
         // Respond with the saved item and a success message
-        res.status(201).json({ 
-            _id: savedItem._id, // Ensure _id is included
+        res.status(201).json({
+            _id: savedItem._id,
             name: savedItem.name,
             category: savedItem.category,
             subcategory: savedItem.subcategory,
-            purchasedprice:savedItem.purchasedprice,
+            purchasedprice: savedItem.purchasedprice,
             quantity: savedItem.quantity,
             unit: savedItem.unit,
             price: savedItem.price,
-            message: "Item created successfully"
+            file: file,
+            message: "Item created successfully",
         });
     } catch (error) {
         // Handle server errors
+        console.log(error)
+        console.error("[ERROR] Failed to create inventory item:", error.message);
         res.status(500).json({ message: error.message });
     }
 };
 
 
 // Update inventory item
-const mongoose = require('mongoose');
 // const inventory = require('../models/inventory');
 
 module.exports.updateInventory = async (req, res) => {

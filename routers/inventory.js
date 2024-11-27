@@ -12,16 +12,20 @@ const {
     getCategoryWiseStock,
     getNewItemsLastTwoDays,
     getMonthlyPurchasePrice,
-    getAllInventoryc
+    getAllInventoryc,
 } = require('../controllers/Inventory');
+
+const upload = require('../middlewares/multer'); // Import multer middleware
 
 const router = express.Router();
 
-// Create new inventory item
-router.post('/createinventory', createInventory);
+// Routes
+
+// Create new inventory item (with image upload)
+router.post('/createinventory',createInventory);
 
 // Update inventory item by ID
-router.put('/inventory/:id', updateInventory);
+router.put('/inventory/:id', updateInventory); // Allows optional image update
 
 // Delete inventory item by ID
 router.delete('/inventory/:id', deleteInventory);
@@ -29,17 +33,28 @@ router.delete('/inventory/:id', deleteInventory);
 // Get all inventory items
 router.get('/getallinventory', getAllInventory);
 router.get('/getallinventoryc', getAllInventoryc);
-router.get('/gettotal', getCategoryWiseStock);
-router.get('/getmonthwise', getMonthlyPurchasePrice);
-router.get('/getnewitems', getNewItemsLastTwoDays);
-router.get('/getpurchasedprice',getCategoryWisePurchasedValue);
 
+// Get total stock details
+router.get('/gettotal', getCategoryWiseStock);
+
+// Get monthly purchase price summary
+router.get('/getmonthwise', getMonthlyPurchasePrice);
+
+// Get new items added in the last two days
+router.get('/getnewitems', getNewItemsLastTwoDays);
+
+// Get category-wise purchased price summary
+router.get('/getpurchasedprice', getCategoryWisePurchasedValue);
+
+// Get low-stock inventory items
 router.get('/getlowinventory', getLowStockItems);
 
 // Get inventory item by ID
 router.get('/getinventory/:id', getInventoryById);
 
-router.get('/search',search)
+// Search inventory items
+router.get('/search', search);
+
 // Restock inventory item by ID
 router.patch('/restockinventory/:id/restock', restockInventory);
 

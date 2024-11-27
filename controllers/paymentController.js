@@ -149,40 +149,41 @@
   };
 
   // Get payments for a specific user by userId
-const getUserPayments = async (req, res) => {
-  try {
-    const { userId } = req.params;  // Get userId from route parameter
-
-    // Find payments for the specific user and populate user information
-    const payments = await Payment.find({ userId }).populate('userId', 'firstName lastName email');
-
-    if (!payments.length) {
-      return res.status(404).json({
+  const getUserPayments = async (req, res) => {
+    try {
+      console.log("Fetching user payments...");
+      const { id } = req.params; // Get user ID from route parameter (was `userId` before)
+      console.log("User ID:", id);
+  
+      // Find payments for the specific user and populate user information
+      const payments = await Payment.find({ userId: id }).populate('userId', 'firstName lastName email');
+  
+      if (!payments.length) {
+        return res.status(404).json({
+          success: false,
+          message: `No payments found for user with ID ${id}`,
+        });
+      }
+  
+      // Format the response to include user info along with the payment amount
+      const userPayments = payments.map(payment => ({
+        user: payment.userId, // Populated user info (firstName, lastName, email)
+        amount: payment.amount, // Amount from the payment
+        date: payment.createdAt, // Date of payment
+      }));
+  
+      res.status(200).json({
+        success: true,
+        userPayments,
+      });
+    } catch (error) {
+      console.error("Error fetching user payments:", error);
+      res.status(500).json({
         success: false,
-        message: `No payments found for user with id ${userId}`,
+        message: "Internal Server Error",
       });
     }
-
-    // Format the response to include user info along with the payment amount
-    const userPayments = payments.map(payment => ({
-      user: payment.userId,  // Populated user info (firstName, lastName, email)
-      amount: payment.amount, // Amount from the payment
-      date: payment.createdAt, // Date of payment
-    }));
-
-    res.status(200).json({
-      success: true,
-      userPayments,
-    });
-  } catch (error) {
-    console.error("Error fetching user payments:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
-  }
-};
-
+  };
   
 
   module.exports = { checkout,getUserPayments, paymentVerification,getTotalAmount, getAllUsersWithPayments };

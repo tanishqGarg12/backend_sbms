@@ -11,7 +11,7 @@ const inventorySchema = new mongoose.Schema({
     },
     subcategory: {
         type: String,
-        required:true
+        required: true
     },
     quantity: {
         type: Number,
@@ -28,6 +28,10 @@ const inventorySchema = new mongoose.Schema({
     price: {
         type: Number,
         required: true
+    },
+    file: {
+        type: String, // This will store the image file path
+        // required: true // Make it required if every inventory item must have an image
     }
 }, { timestamps: true });
 

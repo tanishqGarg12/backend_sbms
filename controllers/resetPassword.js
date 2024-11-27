@@ -38,7 +38,7 @@ exports.forgotPassword = async (req, res) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: user.email,
-            subject: ' WELCOME TO THE HOUSE MANNNNN',
+            subject: ' WELCOME TO THE SMART BILLING MANAGEMENT SYSTEM',
             text: text
         };
         console.log("before the ===========")

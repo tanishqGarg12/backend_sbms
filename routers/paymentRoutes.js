@@ -1,13 +1,27 @@
-const express=require("express")
-const {checkout, paymentVerification,getAllUsersWithPayments,getTotalAmount, getUserPayments}=require("../controllers/paymentController.js")
-
+const express = require("express");
+const {
+  checkout,
+  paymentVerification,
+  getAllUsersWithPayments,
+  getTotalAmount,
+  getUserPayments,
+} = require("../controllers/paymentController.js");
 
 const router = express.Router();
 
-router.route("/checkout").post(checkout);
+// Route for initiating checkout
+router.post("/checkout", checkout);
 
-router.route("/paymentverification").post(paymentVerification);
-router.route("/getAllUserPayments").get(getAllUsersWithPayments)
-router.route("/getTotall").get(getTotalAmount)
-router.route("/getspe").get(getUserPayments)
+// Route for verifying payment
+router.post("/paymentverification", paymentVerification);
+
+// Route to get all users and their payments
+router.get("/getAllUserPayments", getAllUsersWithPayments);
+
+// Route to get the total payment amount
+router.get("/getTotal", getTotalAmount); // Corrected typo in route from "getTotall" to "getTotal"
+
+// Route to get payments for a specific user by ID
+router.get("/getspe/:id", getUserPayments);
+
 module.exports = router;

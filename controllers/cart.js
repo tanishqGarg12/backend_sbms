@@ -155,7 +155,9 @@ exports.removeItemFromCart = async (req, res) => {
 
 exports.clearCart = async (req, res) => {
   try {
-    let cart = await Cart.findOne({ userId: req.user._id });
+    console.log("in the clearence")
+    let cart = await Cart.findOne({ userId: req.user.id });
+    console.log(req.user)
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
