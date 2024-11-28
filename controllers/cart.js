@@ -155,20 +155,34 @@ exports.removeItemFromCart = async (req, res) => {
 
 exports.clearCart = async (req, res) => {
   try {
-    console.log("in the clearence")
+    console.log("in the clearance");
     let cart = await Cart.findOne({ userId: req.user.id });
-    console.log(req.user)
+    
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
+    // Update inventory for each item in cart
+    for (const cartItem of cart.items) {
+      const inventory = await Inventory.findById(cartItem.productId);
+      
+      if (inventory) {
+        inventory.quantity -= cartItem.quantity;
+        // Ensure quantity doesn't go negative
+        inventory.quantity = Math.max(0, inventory.quantity);
+        await inventory.save();
+      }
+    }
+
+    // Clear cart
     cart.items = [];
     cart.totalQuantity = 0;
     cart.totalPrice = 0;
-
     await cart.save();
+
     res.status(200).json(cart);
   } catch (error) {
+    console.error('Error clearing cart:', error);
     res.status(500).json({ message: 'Server Error', error });
   }
 };
