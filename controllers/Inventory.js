@@ -1,14 +1,20 @@
 const mongoose = require('mongoose');
 const inventory = require("../models/inventory");
-// import mongoose from "mongoose";
-
-// Create new inventory item
 module.exports.createInventory = async (req, res) => {
     try {
-        const { name, category, quantity, unit, purchasedprice, price, subcategory,file } = req.body;
-        
-        // console.log("[DEBUG] Request body:", req.body);
-        // console.log("[DEBUG] Request file:", req.file);
+        console.log("Received Request");
+
+        // Log the uploaded file for debugging
+        if (req.file) {
+            console.log("Uploaded File:", req.file);
+        } else {
+            console.log("No file uploaded");
+        }
+
+        const { name, category, quantity, unit, purchasedprice, price, subcategory } = req.body;
+
+        // Handle file path
+        const file = req.file ? `/uploads/${req.file.filename}` : null; // Use relative path for the file
 
         // Validate required fields
         if (!name || !category || !unit || !price) {
@@ -20,15 +26,6 @@ module.exports.createInventory = async (req, res) => {
             return res.status(400).json({ message: 'Quantity and price must be non-negative.' });
         }
 
-        // Check if an image was uploaded
-        // console.log("[DEBUG] Uploaded file details:", req.file);
-        // if (!req.file) {
-        //     console.log("no file")
-        //     return res.status(400).json({ message: 'Image is required.' });
-        // }
-
-        // Log file details for debugging
-
         // Create new inventory item
         const newInventoryItem = new inventory({
             name,
@@ -38,10 +35,8 @@ module.exports.createInventory = async (req, res) => {
             unit,
             purchasedprice,
             price,
-            file // Store image path
+            file // Store the relative image path
         });
-
-        // console.log("[DEBUG] New inventory item created:", newInventoryItem);
 
         // Save the item to the database
         const savedItem = await newInventoryItem.save();
@@ -56,12 +51,11 @@ module.exports.createInventory = async (req, res) => {
             quantity: savedItem.quantity,
             unit: savedItem.unit,
             price: savedItem.price,
-            file: file,
+            file: savedItem.file,
             message: "Item created successfully",
         });
     } catch (error) {
         // Handle server errors
-        console.log(error)
         console.error("[ERROR] Failed to create inventory item:", error.message);
         res.status(500).json({ message: error.message });
     }
@@ -72,6 +66,7 @@ module.exports.createInventory = async (req, res) => {
 // const inventory = require('../models/inventory');
 
 module.exports.updateInventory = async (req, res) => {
+    console.log("Edfcdsdcfddc")
     const { name, category, description, purchasedprice,quantity, unit, price, supplierName } = req.body;
     const { id } = req.params;
 
@@ -337,6 +332,7 @@ module.exports.getCategoryWisePurchasedValue = async (req, res) => {
 // Get new inventory items added in the last two days
 module.exports.getNewItemsLastTwoDays = async (req, res) => {
     try {
+        console.log("testing the get new items")
         const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // Calculate date for two days ago
         
         // Fetch items added in the last two days
@@ -382,7 +378,7 @@ module.exports.getMonthlyPurchasePrice = async (req, res) => {
         // Respond with the result and the length
         res.status(200).json({
             success: true,
-            // data: result,
+            data: result,
             length: length
         });
     } catch (error) {

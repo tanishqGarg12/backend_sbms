@@ -12,10 +12,12 @@ if (!fs.existsSync(uploadDir)) {
 // Set up storage configuration for Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        console.log("in the");
         console.log(`[DEBUG] Setting destination for file: ${file.originalname}`);
         cb(null, uploadDir); // Save files in the 'uploads' folder
     },
     filename: (req, file, cb) => {
+        console.log("in the");
         const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
         console.log(`[DEBUG] Generated unique filename: ${uniqueName} for file: ${file.originalname}`);
         cb(null, uniqueName);

@@ -27,6 +27,17 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
+    // If role is admin, check existing admin count
+    if (role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount >= 2) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Maximum number of admin users (2) already exists' 
+        });
+      }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -38,7 +49,7 @@ exports.signup = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role: role === 'admin' ? 'admin' : 'user', // Assign role based on checkbox
+      role: role === 'admin' ? 'admin' : 'user',
     });
 
     return res.status(200).json({ success: true, user, message: 'User registered successfully' });

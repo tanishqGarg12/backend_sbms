@@ -1,6 +1,7 @@
 // controllers/categoryController.js
 
 const Category = require('../models/category');
+const Subcategory = require('../models/subcategory');
 
 // Create a new category
 const createCategory = async (req, res) => {
@@ -30,7 +31,43 @@ const getAllCategories = async (req, res) => {
   }
 };
 
+// Update a category
+const updateCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name, description } = req.body;
+
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      id,
+      { name, description },
+      { new: true }
+    );
+    res.status(200).json(updatedCategory);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+};
+
+// Delete a category
+const deleteCategory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Remove all subcategories associated with this category
+    await Subcategory.deleteMany({ categoryId: id });
+
+    // Remove the category itself
+    await Category.findByIdAndDelete(id);
+
+    res.status(200).json({ message: 'Category deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
+};
+
 module.exports = {
   createCategory,
   getAllCategories,
+  updateCategory,
+  deleteCategory,
 };

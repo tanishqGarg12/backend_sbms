@@ -5,6 +5,7 @@ const {
   getAllUsersWithPayments,
   getTotalAmount,
   getUserPayments,
+  getMonthlySellingData
 } = require("../controllers/paymentController.js");
 
 const router = express.Router();
@@ -23,5 +24,5 @@ router.get("/getTotal", getTotalAmount); // Corrected typo in route from "getTot
 
 // Route to get payments for a specific user by ID
 router.get("/getspe/:id", getUserPayments);
-
+router.get("/allsell",getMonthlySellingData);
 module.exports = router;

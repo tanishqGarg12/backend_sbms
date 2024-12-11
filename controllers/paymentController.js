@@ -64,7 +64,7 @@
           razorpay_payment_id,
           razorpay_signature,
           userId:id, 
-          amount
+          amount:amount/100
           // Storing the user ID for tracking the user who made the payment
         });
 
@@ -185,5 +185,46 @@
     }
   };
   
+  const getMonthlySellingData = async (req, res) => {
+    try {
+      // Aggregate payments by month and calculate the total selling amount for each month
+      const monthlySellingData = await Payment.aggregate([
+        {
+          $group: {
+            _id: { $month: "$createdAt" }, // Group by month
+            totalSellingAmount: { $sum: "$amount" }, // Sum the amount for each month
+          },
+        },
+        {
+          $sort: { _id: 1 }, // Sort by month
+        },
+      ]);
+  
+      if (!monthlySellingData.length) {
+        return res.status(404).json({
+          success: false,
+          message: "No selling data found",
+        });
+      }
+  
+      // Format the response to include month and total selling amount
+      const formattedData = monthlySellingData.map(data => ({
+        month: data._id,
+        totalSellingAmount: data.totalSellingAmount,
+      }));
+  
+      res.status(200).json({
+        success: true,
+        data: formattedData,
+      });
+    } catch (error) {
+      console.error("Error in getting monthly selling data:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  };
+  
 
-  module.exports = { checkout,getUserPayments, paymentVerification,getTotalAmount, getAllUsersWithPayments };
+  module.exports = {getMonthlySellingData, checkout,getUserPayments, paymentVerification,getTotalAmount, getAllUsersWithPayments };

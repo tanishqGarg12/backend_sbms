@@ -5,13 +5,17 @@ const inventoryRoutes = require("./routers/inventory");
 const invoiceRoutes = require("./routers/invoice");
 const testimonialRoutes = require("./routers/testimonialRoutes"); 
 const cartRoutes = require("./routers/cart");
-const CategiryRoutes = require("./routers/categorySubcategoryRoutes");
+const categoryRoutes = require("./routers/categorySubcategoryRoutes");
 const paymentRoutes = require("./routers/paymentRoutes");
 const database = require("./config/database");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+// const upload=require('./uploads')
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, './uploads')));
+
 
 dotenv.config();
 
@@ -28,11 +32,7 @@ app.use(cors({
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
-
-app.use(fileUpload({
-    useTempFiles: true,
-    tempFileDir: "/tmp",
-}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const Razorpay = require("razorpay");
 const instance = new Razorpay({
@@ -43,7 +43,8 @@ const instance = new Razorpay({
 console.log(process.env.RAZORPAY_API_KEY);
 console.log(process.env.RAZORPAY_API_SECRET);
 
-module.exports = instance;
+// Use the Razorpay instance within relevant routes or controllers
+// module.exports = instance;
 
 // Routes
 app.use("/api/v1/auth", userRoutes);
@@ -51,7 +52,7 @@ app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/invoice", invoiceRoutes);
 app.use("/api/v1/testimonial", testimonialRoutes);
 app.use("/api/v1/cart", cartRoutes);
-app.use("/api/v1/categoryy", CategiryRoutes);
+app.use("/api/v1/categoryy", categoryRoutes);
 app.use("/api/v1/pay", paymentRoutes);
 
 // Default route

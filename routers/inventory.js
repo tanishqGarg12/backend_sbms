@@ -22,10 +22,10 @@ const router = express.Router();
 // Routes
 
 // Create new inventory item (with image upload)
-router.post('/createinventory',createInventory);
+router.post('/createinventory', upload.single('file'), createInventory);
 
-// Update inventory item by ID
-router.put('/inventory/:id', updateInventory); // Allows optional image update
+// Update inventory item by ID (with optional image upload)
+router.put('/inventory/:id', updateInventory);
 
 // Delete inventory item by ID
 router.delete('/inventory/:id', deleteInventory);
@@ -54,6 +54,7 @@ router.get('/getinventory/:id', getInventoryById);
 
 // Search inventory items
 router.get('/search', search);
+
 
 // Restock inventory item by ID
 router.patch('/restockinventory/:id/restock', restockInventory);
