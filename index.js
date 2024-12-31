@@ -24,7 +24,7 @@ database.connect();
 
 // CORS Configuration
 app.use(cors({
-    origin:'*', // Frontend domain
+    origin:['https://sbms1-r2as.vercel.app'], // Frontend domain
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
